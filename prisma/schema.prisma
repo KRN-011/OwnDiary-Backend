@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =======================================================
+// USER MODEL
+// =======================================================
+
+model User {
+  id                    String          @id @default(uuid())
+  username              String
+  email                 String
+  hashedPassword        String
+  createdAt             DateTime        @default(now())
+
+  expenses              Expense[]
+  trades                Trade[]
+  expenseCategories     ExpenseCategory[]
+}
+
+// =======================================================
+// EXPENSE MODEL
+// =======================================================
+
+model Expense {
+  id                    String          @id @default(uuid())
+  title                 String
+  description           String?
+  amount                Float
+
+  imageAttachments      String[]            // S3 / Supabase URLs
+
+  userId                String
+  user                  User            @relation(fields: [userId], references: [id]) 
+
+  categoryId            String?
+  category              ExpenseCategory?     @relation(fields: [categoryId], references: [id])
+
+  parentId              String?
+  parent                Expense?        @relation("SubExpenses", fields: [parentId], references: [id])
+  subExpenses           Expense[]       @relation("SubExpenses")  
+  
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@index([userId])
+  @@index([parentId])
+}
+
+model ExpenseCategory {
+  id                    String          @id @default(uuid())
+  name                  String
+  icon                  String?
+
+  userId                String
+  user                  User            @relation(fields: [userId], references: [id])
+
+  expenses              Expense[]
+
+  @@unique([userId, name])
+}
+
+// =======================================================
+// TRADE MODEL
+// =======================================================
+
+enum TradeType {
+  BUY
+  SELL
+}
+
+enum TradeSegment {
+  EQUITY
+  FNO
+  CURRENCY
+  CRYPTO
+  COMMODITY
+}
+
+model Trade {
+  id                  String          @id @default(uuid())
+  date                DateTime
+  day                 String
+  time                String
+
+  symbol              String
+  segment             TradeSegment
+  tradeType           TradeType
+
+  entryPrice          Float
+  quantity            Int
+  stoplossPrice       Float?
+  exitPrice           Float?
+
+  netProfit           Float
+  isRulesFollowed     Boolean
+  remarkOnTrade       String?
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  userId              String
+  user                User            @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([date])
+}
