@@ -1,3 +1,4 @@
+import { EMAIL_REGEX, PASSWORD_REGEX } from "../../constants/generalConstants.js"
 import prisma from "../../prisma/client.js"
 import { comparePassword, hashPassword } from "../../utils/hash.js"
 import { generateToken } from "../../utils/token.js"
@@ -6,6 +7,24 @@ import { generateToken } from "../../utils/token.js"
 // register user
 export const registerUserService = async ({ username, email, password }) => {
     try {
+
+        // Validate Email
+        if (!email) {
+            return { success: false, statusCode: 400, message: 'Email is required' }
+        }
+
+        if (!EMAIL_REGEX.test(email)) {
+            return { success: false, statusCode: 400, message: 'Invalid Email' }
+        }
+
+        // Validate Password
+        if (!password) {
+            return { success: false, statusCode: 400, message: 'Password is required' }
+        }
+
+        if (!PASSWORD_REGEX.test(password)) {
+            return { success: false, statusCode: 400, message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character' }
+        }
 
         // Find for existing user
         const user = await prisma.user.findUnique({
@@ -48,6 +67,16 @@ export const registerUserService = async ({ username, email, password }) => {
 // login user
 export const loginUserService = async ({ email, password }) => {
     try {
+        // Validate Email
+        if (!email) {
+            return { success: false, statusCode: 400, message: 'Email is required' }
+        }
+
+        // Validate Password
+        if (!password) {
+            return { success: false, statusCode: 400, message: 'Password is required' }
+        }
+
         // Check if user exists
         const user = await prisma.user.findUnique({
             where: { email }
