@@ -118,13 +118,30 @@ export const createSubExpensesService = async ({ subExpensesData, userId }) => {
 }
 
 // Get All Expenses
-export const getAllExpensesService = async ({ userId }) => {
+export const getAllExpensesService = async ({ userId, paginationData, categoryId, startDate, endDate, sortBy, sortOrder }) => {
     try {
+        // Manage filters
+        let where = {
+            userId: userId,
+            parentId: null,
+        }
+
+        // Manage category filter
+        if (categoryId) {
+            where.categoryId = { contains: categoryId }
+        }
+
+        // Manage date range filter
+        if (startDate && endDate) {
+            where.createdAt = { gte: new Date(startDate), lte: new Date(endDate) }
+        }
+
         // Get All Expenses
         const allExpenses = await prisma.expense.findMany({
-            where: {
-                userId: userId
-            }
+            where: where,
+            skip: paginationData.skip,
+            take: paginationData.limit,
+            orderBy: { [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc' }
         })
 
         // Return response
@@ -178,7 +195,8 @@ export const updateExpenseService = async ({ id, title, description, amount, ima
                 description,
                 amount,
                 imageAttachments,
-                categoryId
+                categoryId,
+                updatedAt: new Date()
             }
         })
 

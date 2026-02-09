@@ -6,6 +6,7 @@ import cors from "cors";
 import testRoutes from "./routes/test-routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import expenseRoutes from "./modules/expense/expense.routes.js";
+import tradeRoutes from "./modules/trade/trade.routes.js";
 
 // app
 const app = express();
@@ -18,5 +19,6 @@ app.use(cors());
 app.use('/api/test', testRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/expense', expenseRoutes)
+app.use('/api/trade', tradeRoutes)
 
 export default app;

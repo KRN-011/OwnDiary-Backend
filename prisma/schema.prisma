@@ -85,7 +85,7 @@ enum TradeSegment {
 model Trade {
   id                  String          @id @default(uuid())
   date                DateTime
-  day                 String
+  day                 Days
   time                String
 
   symbol              String
@@ -109,4 +109,18 @@ model Trade {
 
   @@index([userId])
   @@index([date])
+}
+
+// =======================================================
+// GENERAL ENUMS
+// =======================================================
+
+enum Days {
+  MON
+  TUES
+  WEDNES
+  THURS
+  FRI
+  SATUR
+  SUN
 }
