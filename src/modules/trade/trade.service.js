@@ -62,7 +62,7 @@ export const getAllTradesService = async ({ userId, paginationData, day, symbol,
         if (startDate && endDate) {
             where.date = { gte: new Date(startDate), lte: new Date(endDate) }
         }
-        
+
         // Get all trades
         const allTrades = await prisma.trade.findMany({
             where: where,
@@ -131,5 +131,127 @@ export const deleteTradeService = async ({ id, userId }) => {
     } catch (error) {
         console.log(error)
         return { success: false, statusCode: 500, message: 'Internal Server Error', error: error.message }
+    }
+}
+
+// Trade Cards Analytics
+export const tradeCardsAnalyticsService = async ({ userId, avgType, startDate, endDate }) => {
+    try {
+        // Get Current Month's net profit
+        const currentMonthNetProfit = await prisma.trade.aggregate({
+            where: { userId, createdAt: { gte: new Date(new Date().setMonth(new Date().getMonth(), 1)), lte: new Date(new Date().setMonth(new Date().getMonth() + 1, 0)) } },
+            _sum: { netProfit: true }
+        })
+
+        // Get Wins Of Current Month based on netProfit > 0
+        const winCountOfCurrentMonth = await prisma.trade.aggregate({
+            where: { userId, createdAt: { gte: new Date(new Date().setMonth(new Date().getMonth(), 1)) }, netProfit: { gt: 0 } },
+            _count: { id: true }
+        })
+
+        // Get Losses Of Current Month based on netProfit < 0
+        const lossCountOfCurrentMonth = await prisma.trade.aggregate({
+            where: { userId, createdAt: { gte: new Date(new Date().setMonth(new Date().getMonth(), 1)) }, netProfit: { lt: 0 } },
+            _count: { id: true }
+        })
+
+        // Get Win Rate Of Current Month
+        const winRateOfCurrentMonth = (winCountOfCurrentMonth.id.count / (winCountOfCurrentMonth.id.count + lossCountOfCurrentMonth.id.count)) * 100
+
+        // Get Total Trades of current month
+        const totalTradesOfCurrentMonth = await prisma.trade.aggregate({
+            where: { userId, createdAt: { gte: new Date(new Date().setMonth(new Date().getMonth(), 1)), lte: new Date(new Date().setMonth(new Date().getMonth() + 1, 0)) } },
+            _count: { id: true }
+        })
+
+        // Get Last Month's net profit
+        const lastMonthNetProfit = await prisma.trade.aggregate({
+            where: { userId, createdAt: { gte: new Date(new Date().setMonth(new Date().getMonth() - 1, 1)), lte: new Date(new Date().setMonth(new Date().getMonth(), 0)) } },
+            _sum: { netProfit: true }
+        })
+
+        // Get % of change in net profit compare to last month
+        const percentageChangeInNetProfitCompareToLastMonth = (currentMonthNetProfit.netProfit - lastMonthNetProfit.netProfit) / lastMonthNetProfit.netProfit * 100
+
+        // Return response
+        return {
+            success: true,
+            statusCode: 200,
+            message: 'Trade Cards Analytics Fetched Successfully',
+            data: {
+                currentMonthNetProfit: currentMonthNetProfit.netProfit,
+            }
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            success: false,
+            statusCode: 500,
+            message: 'Internal Server Error',
+            error: error.message
+        }
+    }
+}
+
+// Trade Graph Analytics
+export const tradeGraphAnalyticsService = async ({ userId, startDate, endDate }) => {
+    try {
+        // Get Trades
+        const trades = await prisma.trade.findMany({
+            where: { userId, createdAt: { gte: new Date(startDate), lte: new Date(endDate) } }
+        })
+
+        // format trades data
+        const formattedTradesData = trades.map(trade => ({
+            date: trade.createdAt.toISOString().split('T')[0],
+            netProfit: trade.netProfit
+        }))
+
+        // Return response
+        return {
+            success: true,
+            statusCode: 200,
+            message: 'Trade Graph Analytics Fetched Successfully',
+            data: formattedTradesData
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            success: false,
+            statusCode: 500,
+            message: 'Internal Server Error',
+            error: error.message
+        }
+    }
+}
+
+// Trade List Analytics
+export const tradeListAnalyticsService = async ({ userId, startDate, endDate }) => {
+    try {
+        // Get Top 5 Profitable day based on netProfit > 0 in last 30 days
+        const top5ProfitableDays = await prisma.trade.groupBy({
+            by: ['day'],
+            where: { userId, createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 30)) }, netProfit: { gt: 0 } },
+            orderBy: { netProfit: 'desc' },
+            take: 5
+        })
+
+        // Get Top 5 Profitable day based on netProfit < 0 in last year
+        // const top5ProfitableDays = await prisma.trade.groupBy({
+        //     by: ['day'],
+        //     where: { userId, createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 365)) }, netProfit: { lt: 0 } },
+        //     orderBy: { netProfit: 'desc' },
+        //     take: 5
+        // })
+        
+        
+    } catch (error) {
+        console.log(error)
+        return {
+            success: false,
+            statusCode: 500,
+            message: 'Internal Server Error',
+            error: error.message
+        }
     }
 }

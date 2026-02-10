@@ -1,5 +1,5 @@
 import { pagination } from "../../utils/pagination.js";
-import { createTradeService, deleteTradeService, getAllTradesService, updateTradeService } from "./trade.service.js";
+import { createTradeService, deleteTradeService, getAllTradesService, tradeCardsAnalyticsService, tradeGraphAnalyticsService, updateTradeService } from "./trade.service.js";
 
 
 // Create Trade
@@ -119,6 +119,99 @@ export const deleteTradeController = async (req, res) => {
             success: true,
             message: deleteTradeServiceRes.message,
             data: deleteTradeServiceRes.data
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success: false,
+            message: 'Internal Server Error'
+        })
+    }
+}
+
+// Trade Cards Analytics
+export const tradeCardsAnalyticsController = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const { avgType, startDate, endDate } = req.query;
+
+        // Call Service
+        const tradeCardsAnalyticsServiceRes = await tradeCardsAnalyticsService({ userId, avgType, startDate, endDate })
+
+        if (!tradeCardsAnalyticsServiceRes.success) {
+            return res.status(tradeCardsAnalyticsServiceRes.statusCode).json({
+                success: false,
+                message: tradeCardsAnalyticsServiceRes.message
+            })
+        }
+
+        return res.status(tradeCardsAnalyticsServiceRes.statusCode).json({
+            success: true,
+            message: tradeCardsAnalyticsServiceRes.message,
+            data: tradeCardsAnalyticsServiceRes.data
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success: false,
+            message: 'Internal Server Error'
+        })
+    }
+}
+
+// Trade Graph Analytics
+export const tradeGraphAnalyticsController = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const { startDate, endDate } = req.query;
+
+        // Call Service
+        const tradeGraphAnalyticsServiceRes = await tradeGraphAnalyticsService({ userId, startDate, endDate })
+
+        if (!tradeGraphAnalyticsServiceRes.success) {
+            return res.status(tradeGraphAnalyticsServiceRes.statusCode).json({
+                success: false,
+                message: tradeGraphAnalyticsServiceRes.message
+            })
+        }
+        
+        return res.status(tradeGraphAnalyticsServiceRes.statusCode).json({
+            success: true,
+            message: tradeGraphAnalyticsServiceRes.message,
+            data: tradeGraphAnalyticsServiceRes.data
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success: false,
+            message: 'Internal Server Error'
+        })
+    }
+}
+
+// Trade List Analytics
+export const tradeListAnalyticsController = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const { startDate, endDate } = req.query;
+
+        // Call Service
+        const tradeListAnalyticsServiceRes = await tradeListAnalyticsService({ userId, startDate, endDate })
+
+        if (!tradeListAnalyticsServiceRes.success) {
+            return res.status(tradeListAnalyticsServiceRes.statusCode).json({
+                success: false,
+                message: tradeListAnalyticsServiceRes.message
+            })
+        }
+
+        return res.status(tradeListAnalyticsServiceRes.statusCode).json({
+            success: true,
+            message: tradeListAnalyticsServiceRes.message,
+            data: tradeListAnalyticsServiceRes.data
         })
     } catch (error) {
         console.log(error)

@@ -1,4 +1,4 @@
-import { createExpenseService, createSubExpensesService, deleteExpenseService, getAllExpensesService, updateExpenseService } from "./expense.service.js";
+import { createExpenseService, createSubExpensesService, deleteExpenseService, expenseCardsAnalyticsService, expenseGraphAnalyticsService, expenseListAnalyticsService, getAllExpensesService, updateExpenseService } from "./expense.service.js";
 
 
 
@@ -151,6 +151,97 @@ export const deleteExpenseController = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: 'Internal Server Error'
+        })
+    }
+}
+
+// Expense Cards Analytics
+export const expenseCardsAnalyticsController = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const { avgType, startDate, endDate } = req.query;
+
+        // Call Service
+        const expenseCardsAnalyticsServiceRes = await expenseCardsAnalyticsService({ userId, avgType, startDate, endDate })
+
+        if (!expenseCardsAnalyticsServiceRes.success) {
+            return res.status(expenseCardsAnalyticsServiceRes.statusCode).json({
+                success: false,
+                message: expenseCardsAnalyticsServiceRes.message
+            })
+        }
+
+        return res.status(expenseCardsAnalyticsServiceRes.statusCode).json({
+            success: true,
+            message: expenseCardsAnalyticsServiceRes.message,
+            data: expenseCardsAnalyticsServiceRes.data
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Internal Server Error'
+        })
+    }
+}
+
+// Expense Graph Analytics
+export const expenseGraphAnalyticsController = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const { startDate, endDate } = req.query;
+
+        // Call Service
+        const expenseGraphAnalyticsServiceRes = await expenseGraphAnalyticsService({ userId, startDate, endDate })
+
+        if (!expenseGraphAnalyticsServiceRes.success) {
+            return res.status(expenseGraphAnalyticsServiceRes.statusCode).json({
+                success: false,
+                message: expenseGraphAnalyticsServiceRes.message
+            })
+        }
+
+        return res.status(expenseGraphAnalyticsServiceRes.statusCode).json({
+            success: true,
+            message: expenseGraphAnalyticsServiceRes.message,
+            data: expenseGraphAnalyticsServiceRes.data
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Internal Server Error'
+        })
+    }
+}
+
+// Expense List Analytics
+export const expenseListAnalyticsController = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const { startDate, endDate } = req.query;
+
+        // Call Service
+        const expenseListAnalyticsServiceRes = await expenseListAnalyticsService({ userId, startDate, endDate })
+
+        if (!expenseListAnalyticsServiceRes.success) {
+            return res.status(expenseListAnalyticsServiceRes.statusCode).json({
+                success: false,
+                message: expenseListAnalyticsServiceRes.message
+            })
+        }
+
+        return res.status(expenseListAnalyticsServiceRes.statusCode).json({
+            success: true,
+            message: expenseListAnalyticsServiceRes.message,
+            data: expenseListAnalyticsServiceRes.data
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Internal Server Error',
+            error: error.message
         })
     }
 }
