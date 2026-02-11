@@ -228,23 +228,48 @@ export const tradeGraphAnalyticsService = async ({ userId, startDate, endDate })
 // Trade List Analytics
 export const tradeListAnalyticsService = async ({ userId, startDate, endDate }) => {
     try {
-        // Get Top 5 Profitable day based on netProfit > 0 in last 30 days
-        const top5ProfitableDays = await prisma.trade.groupBy({
+        // Get Top 5 Profitable Days based on netProfit > 0 in last 30 days
+        const top5ProfitableDaysInLast30Days = await prisma.trade.groupBy({
             by: ['day'],
             where: { userId, createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 30)) }, netProfit: { gt: 0 } },
             orderBy: { netProfit: 'desc' },
             take: 5
         })
 
-        // Get Top 5 Profitable day based on netProfit < 0 in last year
-        // const top5ProfitableDays = await prisma.trade.groupBy({
-        //     by: ['day'],
-        //     where: { userId, createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 365)) }, netProfit: { lt: 0 } },
-        //     orderBy: { netProfit: 'desc' },
-        //     take: 5
-        // })
+        // Get Top 5 Profitable Days based on netProfit < 0 in last year
+        const top5ProfitableDaysInLastYear = await prisma.trade.groupBy({
+            by: ['day'],
+            where: { userId, createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 365)) }, netProfit: { lt: 0 } },
+            orderBy: { netProfit: 'desc' },
+            take: 5
+        })
         
-        
+        // Get Top 5 Profitable Trades based on netProfit > 0 in last 30 days
+        const top5ProfitableTradesInLast30Days = await prisma.trade.findMany({
+            where: { userId, createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 30)) }, netProfit: { gt: 0 } },
+            orderBy: { netProfit: 'desc' },
+            take: 5
+        })
+
+        // Get Top 5 Profitable Trades based on netProfit < 0 in last year
+        const top5ProfitableTradesInLastYear = await prisma.trade.findMany({
+            where: { userId, createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 365)) }, netProfit: { lt: 0 } },
+            orderBy: { netProfit: 'desc' },
+            take: 5
+        })
+
+        // Return response
+        return {
+            success: true,
+            statusCode: 200,
+            message: 'Trade List Analytics Fetched Successfully',
+            data: {
+                top5ProfitableDaysInLast30Days,
+                top5ProfitableDaysInLastYear,
+                top5ProfitableTradesInLast30Days,
+                top5ProfitableTradesInLastYear
+            }
+        }
     } catch (error) {
         console.log(error)
         return {

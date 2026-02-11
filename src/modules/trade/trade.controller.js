@@ -1,5 +1,5 @@
 import { pagination } from "../../utils/pagination.js";
-import { createTradeService, deleteTradeService, getAllTradesService, tradeCardsAnalyticsService, tradeGraphAnalyticsService, updateTradeService } from "./trade.service.js";
+import { createTradeService, deleteTradeService, getAllTradesService, tradeCardsAnalyticsService, tradeGraphAnalyticsService, tradeListAnalyticsService, updateTradeService } from "./trade.service.js";
 
 
 // Create Trade
