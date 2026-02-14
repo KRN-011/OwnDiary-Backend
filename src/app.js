@@ -1,6 +1,7 @@
 // imports
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 // routes
 import testRoutes from "./routes/test-routes.js";
@@ -12,13 +13,19 @@ import tradeRoutes from "./modules/trade/trade.routes.js";
 const app = express();
 
 // Middleware
+app.use(
+    cors({
+        origin: process.env.CLIENT_URL,
+        credentials: true,
+    }),
+);
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
 
 // Rotues
-app.use('/api/test', testRoutes)
-app.use('/api/auth', authRoutes)
-app.use('/api/expense', expenseRoutes)
-app.use('/api/trade', tradeRoutes)
+app.use("/api/test", testRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/expense", expenseRoutes);
+app.use("/api/trade", tradeRoutes);
 
 export default app;

@@ -122,7 +122,7 @@ export const loginUserService = async ({ email, password }) => {
         return {
             success: false,
             statusCode: 500,
-            message: 'Internal Server Error'
+            message: error.message || 'Internal Server Error'
         }
     }
 }
