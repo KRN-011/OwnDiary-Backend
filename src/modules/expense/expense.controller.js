@@ -67,12 +67,12 @@ export const getAllExpensesController = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        const { page, limit, categoryId, startDate, endDate, sortBy, sortOrder } = req.query;
+        const { page, limit, categoryId, startDate, endDate, sortBy, sortOrder, search } = req.query;
 
         const paginationData = await pagination({ page, limit })
 
         // Call Service
-        const getAllExpensesServiceRes = await getAllExpensesService({ userId, paginationData, categoryId, startDate, endDate, sortBy, sortOrder })
+        const getAllExpensesServiceRes = await getAllExpensesService({ userId, paginationData, categoryId, startDate, endDate, sortBy, sortOrder, search })
 
         if (!getAllExpensesServiceRes.success) {
             return res.status(getAllExpensesServiceRes.statusCode).json({

@@ -118,7 +118,7 @@ export const createSubExpensesService = async ({ subExpensesData, userId }) => {
 }
 
 // Get All Expenses
-export const getAllExpensesService = async ({ userId, paginationData, categoryId, startDate, endDate, sortBy, sortOrder }) => {
+export const getAllExpensesService = async ({ userId, paginationData, categoryId, startDate, endDate, sortBy, sortOrder, search }) => {
     try {
         // Manage filters
         let where = {
@@ -134,6 +134,14 @@ export const getAllExpensesService = async ({ userId, paginationData, categoryId
         // Manage date range filter
         if (startDate && endDate) {
             where.createdAt = { gte: new Date(startDate), lte: new Date(endDate) }
+        }
+
+        // Manage search filter
+        if (search) {
+            where.OR = [
+                { title: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } }
+            ]
         }
 
         // Get All Expenses
