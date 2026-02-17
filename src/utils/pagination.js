@@ -1,6 +1,6 @@
 export const pagination = async ({ page, limit }) => {
-    page = Math.min(1, parseInt(page) || 1);
-    limit = Math.min(10, parseInt(limit) || 10);
+    page = Math.max(1, parseInt(page) || 1);
+    limit = Math.max(1, parseInt(limit) || 10);
 
     const skip = (page - 1) * limit;
 

@@ -1,5 +1,5 @@
 import { createExpenseService, createSubExpensesService, deleteExpenseService, expenseCardsAnalyticsService, expenseGraphAnalyticsService, expenseListAnalyticsService, getAllExpensesService, updateExpenseService } from "./expense.service.js";
-
+import { pagination } from "../../utils/pagination.js";
 
 
 // Create Expense
@@ -22,7 +22,7 @@ export const createExpenseController = async (req, res) => {
         return res.status(createExpenseServiceRes.statusCode).json({
             success: true,
             message: createExpenseServiceRes.message,
-            data: createExpenseServiceRes.data
+            data: createExpenseServiceRes.data,
         })
     } catch (error) {
         return res.status(500).json({
@@ -69,7 +69,7 @@ export const getAllExpensesController = async (req, res) => {
 
         const { page, limit, categoryId, startDate, endDate, sortBy, sortOrder, search } = req.query;
 
-        const paginationData = await pagination({ page, limit })
+        const paginationData = await pagination({ page, limit })        
 
         // Call Service
         const getAllExpensesServiceRes = await getAllExpensesService({ userId, paginationData, categoryId, startDate, endDate, sortBy, sortOrder, search })
@@ -84,7 +84,8 @@ export const getAllExpensesController = async (req, res) => {
         return res.status(getAllExpensesServiceRes.statusCode).json({
             success: true,
             message: getAllExpensesServiceRes.message,
-            data: getAllExpensesServiceRes.data
+            data: getAllExpensesServiceRes.data,
+            meta: getAllExpensesServiceRes.meta
         })
     } catch (error) {
         return res.status(500).json({
