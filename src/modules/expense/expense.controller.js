@@ -1,4 +1,4 @@
-import { createExpenseService, createSubExpensesService, deleteExpenseService, expenseCardsAnalyticsService, expenseGraphAnalyticsService, expenseListAnalyticsService, getAllExpensesService, updateExpenseService } from "./expense.service.js";
+import { createExpenseService, createSubExpensesService, deleteExpenseService, expenseCardsAnalyticsService, expenseGraphAnalyticsService, expenseListAnalyticsService, getAllExpensesService, getSubExpensesBasedOnParentIdService, updateExpenseService } from "./expense.service.js";
 import { pagination } from "../../utils/pagination.js";
 
 
@@ -86,6 +86,36 @@ export const getAllExpensesController = async (req, res) => {
             message: getAllExpensesServiceRes.message,
             data: getAllExpensesServiceRes.data,
             meta: getAllExpensesServiceRes.meta
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.error || 'Internal Server Error'
+        })
+    }
+}
+
+// Get Sub Expenses based on parentId
+export const getSubExpensesBasedOnParentIdController = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const { parentId } = req.params;
+
+        // Call Service
+        const getSubExpensesBasedOnParentIdServiceRes = await getSubExpensesBasedOnParentIdService({ userId, parentId })
+
+        if (!getSubExpensesBasedOnParentIdServiceRes.success) {
+            return res.status(getSubExpensesBasedOnParentIdServiceRes.statusCode).json({
+                success: false,
+                message: getSubExpensesBasedOnParentIdServiceRes.message
+            })
+        }
+
+        return res.status(getSubExpensesBasedOnParentIdServiceRes.statusCode).json({
+            success: true,
+            message: getSubExpensesBasedOnParentIdServiceRes.message,
+            data: getSubExpensesBasedOnParentIdServiceRes.data
         })
     } catch (error) {
         return res.status(500).json({

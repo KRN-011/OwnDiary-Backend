@@ -102,21 +102,21 @@ export const createSubExpensesService = async ({ subExpensesData, userId }) => {
                     message: 'Amount is required',
                 };
             }
-        }
 
-        // Validate Parent Expense
-        if (parentId) {
-            const parentExpense = await prisma.expense.findUnique({
-                where: { id: parentId },
-            });
+            // Validate Parent Expense
+            if (subExpenseData.parentId) {
+                const parentExpense = await prisma.expense.findUnique({
+                    where: { id: subExpenseData.parentId },
+                });
 
-            // Return if parent expense is not found
-            if (!parentExpense) {
-                return {
-                    success: false,
-                    statusCode: 400,
-                    message: 'Parent Expense not found',
-                };
+                // Return if parent expense is not found
+                if (!parentExpense) {
+                    return {
+                        success: false,
+                        statusCode: 400,
+                        message: 'Parent Expense not found',
+                    };
+                }
             }
         }
 
@@ -128,7 +128,7 @@ export const createSubExpensesService = async ({ subExpensesData, userId }) => {
                 amount: subExpenseData.amount,
                 imageAttachments: subExpenseData.imageAttachments,
                 userId: userId,
-                parentId: subExpensesData.parentId,
+                parentId: subExpenseData.parentId,
             })),
         });
 
@@ -162,7 +162,7 @@ export const getAllExpensesService = async ({
     search,
 }) => {
     try {
-        // Manage filters
+        // Manage filters for only master expenses
         let where = {
             userId: userId,
             parentId: null,
@@ -253,6 +253,54 @@ export const getAllExpensesService = async ({
     }
 };
 
+// Get Sub Expenses Based on parentId
+export const getSubExpensesBasedOnParentIdService = async ({ userId, parentId }) => {
+    try {
+
+        // Check if Parent Expense exists
+        const parentExpense = prisma.expense.findUnique({
+            where: {
+                userId: userId,
+                id: parentId,
+                parentId: null,
+            }
+        })
+
+        // Return if Parent Expense is not found
+        if (!parentExpense) {
+            return {
+                success: false,
+                statusCode: 404,
+                message: 'Parent Expense not found',
+            };
+        }
+
+        // Get Sub Expenses
+        const subExpenses = await prisma.expense.findMany({
+            where: {
+                userId: userId,
+                parentId: parentId,
+            },
+        });
+
+        // Return response
+        return {
+            success: true,
+            statusCode: 200,
+            message: 'Sub Expenses Fetched Successfully',
+            data: subExpenses,
+        };
+    } catch (error) {
+        console.log(error);
+        return {
+            success: false,
+            statusCode: 500,
+            message: 'Internal Server Error',
+            error: error.message,
+        };
+    }
+}
+
 // Update Expense
 export const updateExpenseService = async ({
     id,
@@ -329,7 +377,7 @@ export const updateExpenseService = async ({
 export const deleteExpenseService = async ({ id, userId }) => {
     try {
         // Check if expense exists
-        const expense = await prisma.expense.delete({
+        const expense = await prisma.expense.findUnique({
             where: { id, userId },
         });
 

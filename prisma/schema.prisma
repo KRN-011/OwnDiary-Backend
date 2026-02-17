@@ -21,6 +21,7 @@ model User {
   expenses              Expense[]
   trades                Trade[]
   expenseCategories     ExpenseCategory[]
+  expenseGroups         ExpenseGroup[]
 }
 
 // =======================================================
@@ -45,11 +46,44 @@ model Expense {
   parent                Expense?        @relation("SubExpenses", fields: [parentId], references: [id])
   subExpenses           Expense[]       @relation("SubExpenses")  
   
+  groupId               String?
+  group                 ExpenseGroup?   @relation(fields: [groupId], references: [id])
+
+  expenseDate           DateTime        @default(now())
+  
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
 
   @@index([userId])
   @@index([parentId])
+}
+
+model ExpenseGroup {
+  id                    String          @id @default(uuid())
+  title                 String          
+  description           String?
+  amount                Float
+
+  frequencyType         FrequencyType
+  interval              Int?
+  daysOfWeek            Days[]
+  dayOfMonth            Int?
+
+  startDate             DateTime
+  endDate               DateTime?
+
+  categoryId            String?
+  category              ExpenseCategory?     @relation(fields: [categoryId], references: [id])
+
+  userId                String
+  user                  User            @relation(fields: [userId], references: [id])
+
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  expenses              Expense[]
+
+  @@index([userId])
 }
 
 model ExpenseCategory {
@@ -61,8 +95,16 @@ model ExpenseCategory {
   user                  User            @relation(fields: [userId], references: [id])
 
   expenses              Expense[]
+  expenseGroups         ExpenseGroup[]
 
   @@unique([userId, name])
+}
+
+enum FrequencyType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  CUSTOM
 }
 
 // =======================================================
