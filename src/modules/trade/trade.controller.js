@@ -1,5 +1,5 @@
 import { pagination } from "../../utils/pagination.js";
-import { createTradeService, deleteTradeService, getAllTradesService, tradeCardsAnalyticsService, tradeGraphAnalyticsService, tradeListAnalyticsService, updateTradeService } from "./trade.service.js";
+import { createTradeService, deleteTradeService, getAllTradesService, getTradeSymbolsService, tradeCardsAnalyticsService, tradeGraphAnalyticsService, tradeListAnalyticsService, updateTradeService } from "./trade.service.js";
 
 
 // Create Trade
@@ -55,7 +55,8 @@ export const getAllTradesController = async (req, res) => {
         return res.status(getAllTradesServiceRes.statusCode).json({
             success: true,
             message: getAllTradesServiceRes.message,
-            data: getAllTradesServiceRes.data
+            data: getAllTradesServiceRes.data,
+            meta: getAllTradesServiceRes.meta
         })
     } catch (error) {
         console.log(error)
@@ -212,6 +213,36 @@ export const tradeListAnalyticsController = async (req, res) => {
             success: true,
             message: tradeListAnalyticsServiceRes.message,
             data: tradeListAnalyticsServiceRes.data
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success: false,
+            message: 'Internal Server Error'
+        })
+    }
+}
+
+// Get Trade Symbols
+export const getTradeSymbolsController = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { search } = req.query;
+
+        // Call Service
+        const getTradeSymbolsServiceRes = await getTradeSymbolsService({ userId, search })
+
+        if (!getTradeSymbolsServiceRes.success) {
+            return res.status(getTradeSymbolsServiceRes.statusCode).json({
+                success: false,
+                message: getTradeSymbolsServiceRes.message
+            })
+        }
+        
+        return res.status(getTradeSymbolsServiceRes.statusCode).json({
+            success: true,
+            message: getTradeSymbolsServiceRes.message,
+            data: getTradeSymbolsServiceRes.data
         })
     } catch (error) {
         console.log(error)

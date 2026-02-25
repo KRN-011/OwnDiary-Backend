@@ -12,9 +12,12 @@ export const createTradeService = async ({ date, day, time, symbol, segment, tra
             return { success: false, statusCode: validateTradeRequest.statusCode, message: validateTradeRequest.message }
         }
 
+        // Normalize symbol
+        const normalizedSymbol = symbol.toUpperCase()
+
         // create trade
         const newTrade = await prisma.trade.create({
-            data: { date, day, time, symbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade, userId }
+            data: { date, day, time, symbol: normalizedSymbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade, userId }
         })
 
         // return response
@@ -33,34 +36,62 @@ export const getAllTradesService = async ({ userId, paginationData, day, symbol,
             userId: userId
         }
 
-        // Manage day filter
+        // Manage day filter (enum)
         if (day) {
-            where.day = { contains: day }
+            where.day = day
         }
 
-        // Manage symbol filter
+        // Manage symbol filter (string)
         if (symbol) {
-            where.symbol = { contains: symbol }
+            where.symbol = { contains: symbol, mode: 'insensitive' }
         }
 
-        // Manage segment filter
+        // Manage segment filter (enum)
         if (segment) {
-            where.segment = { contains: segment }
+            where.segment = segment
         }
 
-        // Manage trade type filter
+        // Manage trade type filter (enum)
         if (tradeType) {
-            where.tradeType = { contains: tradeType }
+            where.tradeType = tradeType
         }
 
-        // Manage is rules followed filter
-        if (isRulesFollowed) {
-            where.isRulesFollowed = { contains: isRulesFollowed }
+        // Manage is rules followed filter (boolean)
+        if (typeof isRulesFollowed !== 'undefined') {
+            if (typeof isRulesFollowed === 'string') {
+                where.isRulesFollowed = isRulesFollowed === 'true'
+            } else {
+                where.isRulesFollowed = !!isRulesFollowed
+            }
         }
 
         // Manage date range filter
         if (startDate && endDate) {
-            where.date = { gte: new Date(startDate), lte: new Date(endDate) }
+            where.createdAt = {
+                gte: new Date(startDate),
+                lte: new Date(endDate + 'T23:59:59.999Z'),
+            };
+        }
+
+        // Manage sort filter
+        const ALLOWED_SORT_FIELDS = [
+            'createdAt',
+            'date',
+            'netProfit',
+            'symbol',
+            'updatedAt',
+            'quantity',
+            'time'
+        ]
+
+        // Default sort
+        let orderBy = { createdAt: 'desc' }
+
+        // Validate sortBy
+        if (sortBy && ALLOWED_SORT_FIELDS.includes(sortBy)) {
+            orderBy = {
+                [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc'
+            }
         }
 
         // Get all trades
@@ -68,15 +99,26 @@ export const getAllTradesService = async ({ userId, paginationData, day, symbol,
             where: where,
             skip: paginationData.skip,
             take: paginationData.limit,
-            orderBy: { [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc' }
+            orderBy
         })
+
+        // Meta object
+        const meta = {
+            total: await prisma.trade.count({ where }),
+            page: paginationData.page,
+            limit: paginationData.limit,
+            totalPages: Math.ceil(
+                (await prisma.trade.count({ where })) / paginationData.limit,
+            ),
+        };
 
         // Return response
         return {
             success: true,
             statusCode: 200,
             message: 'Trades Fetched Successfully',
-            data: allTrades
+            data: allTrades,
+            meta
         }
     } catch (error) {
         console.log(error)
@@ -94,10 +136,13 @@ export const updateTradeService = async ({ id, date, day, time, symbol, segment,
             return { success: false, statusCode: validateTradeRequest.statusCode, message: validateTradeRequest.message }
         }
 
+        // Normalize symbol
+        const normalizedSymbol = symbol.toUpperCase()
+
         // update trade
         const updatedTrade = await prisma.trade.update({
             where: { id, userId },
-            data: { date, day, time, symbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade }
+            data: { date, day, time, symbol: normalizedSymbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade }
         })
 
         // return response
@@ -243,7 +288,7 @@ export const tradeListAnalyticsService = async ({ userId, startDate, endDate }) 
             orderBy: { netProfit: 'desc' },
             take: 5
         })
-        
+
         // Get Top 5 Profitable Trades based on netProfit > 0 in last 30 days
         const top5ProfitableTradesInLast30Days = await prisma.trade.findMany({
             where: { userId, createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 30)) }, netProfit: { gt: 0 } },
@@ -269,6 +314,44 @@ export const tradeListAnalyticsService = async ({ userId, startDate, endDate }) 
                 top5ProfitableTradesInLast30Days,
                 top5ProfitableTradesInLastYear
             }
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            success: false,
+            statusCode: 500,
+            message: 'Internal Server Error',
+            error: error.message
+        }
+    }
+}
+
+// Get Trade Symbols
+export const getTradeSymbolsService = async ({ userId, search }) => {
+    try {
+
+        // Get trade symbols
+        const trades = await prisma.trade.findMany({
+            where: {
+                userId,
+                symbol: {
+                    contains: search,
+                    mode: 'insensitive'
+                }
+            },
+            select: {
+                symbol: true,
+            }
+        })
+
+        const tradeSymbols = trades.map((t) => t.symbol);
+
+        // Return response
+        return {
+            success: true,
+            statusCode: 200,
+            message: 'Trade Symbols Fetched Successfully',
+            data: tradeSymbols
         }
     } catch (error) {
         console.log(error)

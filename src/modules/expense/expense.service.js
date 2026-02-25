@@ -221,6 +221,9 @@ export const getAllExpensesService = async ({
                         icon: true,
                     },
                 },
+                _count: {
+                    select: { subExpenses: true },
+                },
             },
         });
 
@@ -254,17 +257,19 @@ export const getAllExpensesService = async ({
 };
 
 // Get Sub Expenses Based on parentId
-export const getSubExpensesBasedOnParentIdService = async ({ userId, parentId }) => {
+export const getSubExpensesBasedOnParentIdService = async ({
+    userId,
+    parentId,
+}) => {
     try {
-
         // Check if Parent Expense exists
         const parentExpense = prisma.expense.findUnique({
             where: {
                 userId: userId,
                 id: parentId,
                 parentId: null,
-            }
-        })
+            },
+        });
 
         // Return if Parent Expense is not found
         if (!parentExpense) {
@@ -299,7 +304,7 @@ export const getSubExpensesBasedOnParentIdService = async ({ userId, parentId })
             error: error.message,
         };
     }
-}
+};
 
 // Update Expense
 export const updateExpenseService = async ({

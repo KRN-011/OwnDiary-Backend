@@ -151,6 +151,8 @@ model Trade {
 
   @@index([userId])
   @@index([date])
+
+  @@unique([userId, symbol])
 }
 
 // =======================================================
