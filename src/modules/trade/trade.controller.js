@@ -5,12 +5,12 @@ import { createTradeService, deleteTradeService, getAllTradesService, getTradeSy
 // Create Trade
 export const createTradeController = async (req, res) => {
     try {
-        const { date, day, time, symbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade } = req.body;
+        const { date, day, time, symbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade, brokerId, brokerage } = req.body;
 
         const userId = req.user.id;
 
         // Call Service
-        const createTradeServiceRes = await createTradeService({ date, day, time, symbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade, userId })
+        const createTradeServiceRes = await createTradeService({ date, day, time, symbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade, brokerId, brokerage, userId })
 
         if (!createTradeServiceRes.success) {
             return res.status(createTradeServiceRes.statusCode).json({

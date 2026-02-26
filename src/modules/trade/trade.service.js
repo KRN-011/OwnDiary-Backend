@@ -3,21 +3,56 @@ import prisma from "../../prisma/client.js"
 
 
 // Create Trade
-export const createTradeService = async ({ date, day, time, symbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade, userId }) => {
+export const createTradeService = async ({ date, day, time, symbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade, brokerId, brokerage, userId }) => {
     try {
         // validate request
-        const validateTradeRequest = await createTradeValidation({ date, day, time, symbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade })
+        const validateTradeRequest = await createTradeValidation({ date, day, time, symbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade, brokerId, brokerage })
 
         if (!validateTradeRequest.success) {
             return { success: false, statusCode: validateTradeRequest.statusCode, message: validateTradeRequest.message }
         }
 
-        // Normalize symbol
-        const normalizedSymbol = symbol.toUpperCase()
+        // Normalize brokerId
+        let normalizedBrokerId = brokerId
+
+        // Validate Broker, if not found, create a new broker
+        if (brokerId) {
+            const broker = await prisma.broker.findUnique({
+                where: { id: normalizedBrokerId }
+            })
+
+            if (!broker) {
+                const createBroker = await prisma.broker.create({
+                    data: { name: normalizedBrokerId, userId }
+                })
+
+                normalizedBrokerId = createBroker.id
+            }
+        }
+
+        // Normalize symbolId
+        let normalizedSymbolId = null
+
+        // Validate Symbol, if not found, create a new symbol
+        if (symbol) {
+            const existingSymbol = await prisma.symbol.findFirst({
+                where: { name: symbol, userId }
+            })
+            
+            if (existingSymbol) {
+                normalizedSymbolId = existingSymbol.id
+            } else {
+                const createSymbol = await prisma.symbol.create({
+                    data: { name: symbol, userId }
+                })
+
+                normalizedSymbolId = createSymbol.id
+            }
+        }
 
         // create trade
         const newTrade = await prisma.trade.create({
-            data: { date, day, time, symbol: normalizedSymbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade, userId }
+            data: { date, day, time, symbolId: normalizedSymbolId, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade, brokerId: normalizedBrokerId, brokerage, userId }
         })
 
         // return response
@@ -99,7 +134,21 @@ export const getAllTradesService = async ({ userId, paginationData, day, symbol,
             where: where,
             skip: paginationData.skip,
             take: paginationData.limit,
-            orderBy
+            orderBy,
+            include: {
+                symbol: {
+                    select: {
+                        name: true,
+                        id: true
+                    }
+                },
+                broker: {
+                    select: {
+                        name: true,
+                        id: true
+                    }
+                }
+            }
         })
 
         // Meta object
@@ -335,16 +384,26 @@ export const getTradeSymbolsService = async ({ userId, search }) => {
             where: {
                 userId,
                 symbol: {
-                    contains: search,
-                    mode: 'insensitive'
+                    is: {
+                        name: {
+                            contains: search,
+                            mode: 'insensitive'
+                        }
+                    }
                 }
             },
             select: {
-                symbol: true,
+                symbol: {
+                    select: {
+                        name: true
+                    }
+                },
             }
         })
 
-        const tradeSymbols = trades.map((t) => t.symbol);
+        const tradeSymbols = trades
+            .map((t) => t.symbol?.name)
+            .filter(Boolean);
 
         // Return response
         return {

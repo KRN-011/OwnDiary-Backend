@@ -1,7 +1,7 @@
 
 
 // Create Trade Validation
-export const createTradeValidation = async ({ date, day, time, symbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade }) => {
+export const createTradeValidation = async ({ date, day, time, symbol, segment, tradeType, entryPrice, quantity, stoplossPrice, exitPrice, netProfit, isRulesFollowed, remarkOnTrade, brokerId, brokerage }) => {
     if (!date) {
         return { success: false, statusCode: 400, message: 'Date is required' }
     }
@@ -56,6 +56,14 @@ export const createTradeValidation = async ({ date, day, time, symbol, segment, 
 
     if (!remarkOnTrade) {
         return { success: false, statusCode: 400, message: 'Remark On Trade is required' }
+    }
+
+    if (!brokerId) {
+        return { success: false, statusCode: 400, message: 'Broker ID is required' }
+    }
+
+    if (!brokerage) {
+        return { success: false, statusCode: 400, message: 'Brokerage is required' }
     }
 
     return { success: true, statusCode: 200, message: 'Trade Validation Successful' }
