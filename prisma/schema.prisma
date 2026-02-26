@@ -22,6 +22,8 @@ model User {
   trades                Trade[]
   expenseCategories     ExpenseCategory[]
   expenseGroups         ExpenseGroup[]
+  brokers               Broker[]
+  symbols               Symbol[]
 }
 
 // =======================================================
@@ -130,7 +132,9 @@ model Trade {
   day                 Days
   time                String
 
-  symbol              String
+  symbolId            String?          
+  symbol              Symbol?         @relation(fields: [symbolId], references: [id])
+
   segment             TradeSegment
   tradeType           TradeType
 
@@ -139,9 +143,14 @@ model Trade {
   stoplossPrice       Float?
   exitPrice           Float?
 
+  brokerage           Float           @default(0)
   netProfit           Float
+
   isRulesFollowed     Boolean
   remarkOnTrade       String?
+
+  brokerId            String?
+  broker              Broker?         @relation(fields: [brokerId], references: [id])
 
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
@@ -151,8 +160,35 @@ model Trade {
 
   @@index([userId])
   @@index([date])
+}
 
-  @@unique([userId, symbol])
+model Broker {
+  id                  String          @id @default(uuid())
+  name                String
+  isDefault           Boolean         @default(false)
+  userId              String?
+  user                User?           @relation(fields: [userId], references: [id])
+
+  trades              Trade[]
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@index([userId])
+  @@unique([name, userId])
+}
+
+model Symbol {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  trades    Trade[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, name])
 }
 
 // =======================================================
